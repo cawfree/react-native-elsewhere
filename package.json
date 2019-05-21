@@ -1,0 +1,10 @@
+{
+  "name": "@cawfree/react-native-elsewhere",
+  "version": "1.0.0",
+  "description": "Ridiculously simple React Native thread unblocking",
+  "main": "index.js",
+  "repository": "https://github.com/Cawfree/react-native-elsewhere",
+  "author": "hello@cawfree.com",
+  "license": "MIT",
+  "private": false
+}
