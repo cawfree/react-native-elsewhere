@@ -79,7 +79,7 @@ export default class App extends React.Component {
   }
 }
 ```
-Check out the [example](./example/App) application for a full demonstration.
+Check out the [example](https://github.com/Cawfree/react-native-elsewhere/blob/master/example/App.js) application for a full demonstration.
 
 ## ✌️ License
 [MIT](https://opensource.org/licenses/MIT)
