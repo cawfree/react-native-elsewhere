@@ -15,14 +15,18 @@ const styles = StyleSheet.create({
 export default class Elsewhere extends React.Component {
   static propTypes = {
     engine: PropTypes.func,
+    uri: PropTypes.string,
+    onRequestPersist: PropTpes.func,
     onMessage: PropTypes.func,
     onPostMessage: PropTypes.func,
     scripts: PropTypes.arrayOf(PropTypes.string),
   }
   static defaultProps = {
+    engine: function(postMessage, data) {},
+    uri: null,
+    onRequestPersist: (html, path) => null,
     onMessage: data => null,
     onPostMessage: postMessage => null,
-    engine: function(postMessage, data) {},
     scripts: [],
   }
   static wrapEngine = (engine, scripts = []) => `
@@ -44,6 +48,44 @@ export default class Elsewhere extends React.Component {
   constructor(nextProps) {
     super(nextProps);
     this.__onMessage = this.__onMessage.bind(this);
+    const {
+      uri,
+      engine,
+      scripts,
+    } = nextProps;
+    this.state = {
+      uri: null,
+      html: Elsewhere.wrapEngine(
+        engine,
+        scripts,
+      ),
+    };
+    if (uri) {
+      const {
+        onRequestPersist,
+      } = nextProps;
+      if (!onRequestPersist) {
+        throw new Error(
+          `Callers must implement the the onRequestPersist prop in order to serialize the engine at the specified path, "${path}".`,
+        );
+      }
+      const {
+        html,
+      } = this.state;
+      this.__attemptPersistence(
+        html,
+        uri,
+        onRequestPersist,
+      );
+    }
+  }
+  __attemptPersistence(html, uri, onRequestPersist) {
+    return Promise.resolve()
+      .then(() => onRequestPersist(
+        html,
+        uri,
+      ))
+      .then(() => this.setState({ uri }));
   }
   componentDidMount() {
     const {
@@ -68,12 +110,24 @@ export default class Elsewhere extends React.Component {
   }
   render() {
     const {
+      uri,
       engine,
       onMessage,
       onPostMessage,
       scripts,
       ...extraProps
     } = this.props;
+    const {
+      html,
+      uri: persistedUri,
+      ...extraState
+    } = this.state;
+    // XXX: If a uri hasn't been specified, we can render the content immediately.
+    //      Otherwise, we must wait until the resource has been persisted before rendering.
+    const source = (!uri) ? { html } : { uri: (!!persistedUri) && persistedUri };
+    // XXX: In order to read a persisted uri, we must allowFileAccess. Otherwise if we're
+    //      using the engine directly, we don't need this property.
+    const allowFileAccess = (!!uri);
     return (
       <View
         pointerEvents="none"
@@ -82,11 +136,10 @@ export default class Elsewhere extends React.Component {
         <WebView
           ref="engine"
           {...extraProps}
-          source={{
-            html: Elsewhere.wrapEngine(engine, scripts),
-          }}
+          source={source}
           originWhitelist={['*']}
           onMessage={this.__onMessage}
+          allowFileAccess={allowFileAccess}
         />
       </View>
     );
