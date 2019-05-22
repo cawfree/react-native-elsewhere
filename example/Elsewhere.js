@@ -16,7 +16,7 @@ export default class Elsewhere extends React.Component {
   static propTypes = {
     engine: PropTypes.func,
     uri: PropTypes.string,
-    onRequestPersist: PropTpes.func,
+    onRequestPersist: PropTypes.func,
     onMessage: PropTypes.func,
     onPostMessage: PropTypes.func,
     scripts: PropTypes.arrayOf(PropTypes.string),
