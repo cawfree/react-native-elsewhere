@@ -66,7 +66,7 @@ export default class Elsewhere extends React.Component {
       } = nextProps;
       if (!onRequestPersist) {
         throw new Error(
-          `Callers must implement the the onRequestPersist prop in order to serialize the engine at the specified path, "${path}".`,
+          `Callers must implement the the onRequestPersist prop in order to serialize the engine at the specified uri, "${uri}".`,
         );
       }
       const {
