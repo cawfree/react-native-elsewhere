@@ -24,7 +24,7 @@ export default class Elsewhere extends React.Component {
   static defaultProps = {
     engine: function(postMessage, data) {},
     uri: null,
-    onRequestPersist: (html, path) => null,
+    onRequestPersist: null,
     onMessage: data => null,
     onPostMessage: postMessage => null,
     scripts: [],
