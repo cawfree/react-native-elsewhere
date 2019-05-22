@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Alert, StyleSheet, WebView } from 'react-native';
+import { Platform, View, Alert, StyleSheet, WebView } from 'react-native';
 import PropTypes from 'prop-types';
 
 import escape from 'js-string-escape';
@@ -124,7 +124,7 @@ export default class Elsewhere extends React.Component {
     } = this.state;
     // XXX: If a uri hasn't been specified, we can render the content immediately.
     //      Otherwise, we must wait until the resource has been persisted before rendering.
-    const source = (!uri) ? { html } : { uri: persistedUri };
+    const source = (!uri) ? { html } : { uri: persistedUri ? (Platform.OS === 'ios' ? persistedUri : `file://${persistedUri}`) : null};
     // XXX: In order to read a persisted uri, we must allowFileAccess. Otherwise if we're
     //      using the engine directly, we don't need this property.
     const allowFileAccess = (!!uri);
