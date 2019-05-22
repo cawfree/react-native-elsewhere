@@ -17,25 +17,15 @@ export default class Elsewhere extends React.Component {
     engine: PropTypes.func,
     onMessage: PropTypes.func,
     onPostMessage: PropTypes.func,
+    scripts: PropTypes.arrayOf(PropTypes.string),
   }
   static defaultProps = {
-    onMessage: data => Alert.alert(JSON.stringify(data)),
-    onPostMessage: (postMessage) => {
-      setTimeout(
-        () => {
-          postMessage({
-            hello: 'world',
-          });
-        },
-        100,
-      );
-    },
-    // TODO: enforce callers to conform to this implementation
-    engine: function(postMessage, data) {
-      postMessage(data);
-    },
+    onMessage: data => null,
+    onPostMessage: postMessage => null,
+    engine: function(postMessage, data) {},
+    scripts: [],
   }
-  static wrapEngine = engine => `
+  static wrapEngine = (engine, scripts = []) => `
     <!doctype html>
     <html>
       <head>
@@ -44,6 +34,7 @@ export default class Elsewhere extends React.Component {
         <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
       </head>
       <body>
+        ${scripts.map(script => `<script src="${script}"></script>`).join('\n')}
         <script>
           window.engine = ${engine.toString()};
         </script>
@@ -78,6 +69,7 @@ export default class Elsewhere extends React.Component {
   render() {
     const {
       engine,
+      scripts,
     } = this.props;
     return (
       <View
@@ -87,7 +79,7 @@ export default class Elsewhere extends React.Component {
         <WebView
           ref="engine"
           source={{
-            html: Elsewhere.wrapEngine(engine),
+            html: Elsewhere.wrapEngine(engine, scripts),
           }}
           originWhitelist={['*']}
           onMessage={this.__onMessage}
