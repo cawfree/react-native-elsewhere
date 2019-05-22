@@ -69,7 +69,10 @@ export default class Elsewhere extends React.Component {
   render() {
     const {
       engine,
+      onMessage,
+      onPostMessage,
       scripts,
+      ...extraProps
     } = this.props;
     return (
       <View
@@ -78,6 +81,7 @@ export default class Elsewhere extends React.Component {
       >
         <WebView
           ref="engine"
+          {...extraProps}
           source={{
             html: Elsewhere.wrapEngine(engine, scripts),
           }}
