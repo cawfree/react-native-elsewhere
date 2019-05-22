@@ -84,30 +84,34 @@ Check out the [example](https://github.com/Cawfree/react-native-elsewhere/blob/m
 ## 💾 Persistence
 Using the `scripts` prop, it is possible to define an array of urls that you'd like to import as `<script/>`s within your JavaScript logic. Some scripts you call to may rely on localStorage for persistence between launches of your application; however for this to work successfully, your `engine` will need to be serialized to a file location so that thr browser can associate stored data with a given file `uri`.
 
-This can be achieved using the following:
+This can be achieved using the following, which uses [`react-native-fs`](https://github.com/itinance/react-native-fs) as the file I/O utility.
 
 ```javascript
-import fs from 'fs';
+import React from 'react';
+import Elsewhere from '@cawfree/react-native-elsewhere';
+import fs from 'react-native-fs';
 
 // XXX: Declare a uri where we'd like to store the evaluated
 //      engine on the device file system.
 const uri = `${fs.CachesDirectoryPath}/elsewhere.html`;
 
-render() {
-  return (
-    <Elsewhere
-      engine={engine}
-      uri={uri}
-      onRequestPersist={(html, url) => {
-        // XXX: You must return a Promise, which when reslved guarantees
-        //      that the engine html has been saved to the requested uri.
-        return fs.writeFile(
-          url,
-          html,
-        );
-      }}
-    />
-  );
+export default class Persisted extends React.Component {
+  render() {
+    return (
+      <Elsewhere
+        engine={engine}
+        uri={uri}
+        onRequestPersist={(html, url) => {
+          // XXX: You must return a Promise, which when reslved guarantees
+          //      that the engine html has been saved to the requested uri.
+          return fs.writeFile(
+            url,
+            html,
+          );
+        }}
+      />
+    );
+  }
 }
 ```
 
