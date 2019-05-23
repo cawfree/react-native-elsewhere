@@ -16,70 +16,106 @@ Yeah, no linking. 👍
 By delegating stateless JavaScript computation to a [`<WebView />`](https://facebook.github.io/react-native/docs/webview), your app can maintain responsive whilst you crunch through heavy computation in the background.
 
 ```javascript
-import React from 'react';
-import {View} from 'react-native';
+import React, {Component} from 'react';
+import {Button, Platform, StyleSheet, Text, View, Alert} from 'react-native';
+
 import Elsewhere from '@cawfree/react-native-elsewhere';
 
-// XXX: The engine is the worker instance for the data you
-//      send to the Elsewhere. You can do whatever stateless
-//      operations you want. You can post result objects back
-//      to the JavaScript thread by calling postMessage with
-//      a result JSON. The data argument is the object that is
-//      passed during the JS thread's call to __queueSomeIntensiveTask.
-function engine(postMessage, data) {
-  // TODO: Do something crazy intense here. Literally whatever you want.
-  //       You may find it useful to declare these functions in dedicated
-  //       source files, just to emphasise that they operate independently
-  //       from the Component.
+// https://gist.github.com/sqren/5083d73f184acae0c5b7
+function doSomethingIntense(postMessage, { source }) {
+  const now = new Date();
+  let result = 0;   
+  for (var i = Math.pow(10, 7); i >= 0; i--) {      
+    result += Math.atan(i) * Math.tan(i);
+  };
+  postMessage({
+    source,
+    result,
+    dt: new Date().getTime() - now.getTime(),
+  });
 }
 
-export default class App extends React.Component {
-  constructor(nextProps) {
-    super(nextProps);
-    this.__onPostMessage = this.__onPostMessage.bind(this);
-    this.state = {
-      postMessage: null,
-    };
+type Props = {};
+export default class App extends Component<Props> {
+  state = {
+    postMessage: () => null,
   }
-  // XXX: postMessage is a function by which we can use to pass
-  //      message data to the engine.
-  __onPostMessage(postMessage) {
-    this.setState({
-      postMessage,
-    });
-  }
-  // XXX: Note this data is just an example. You can post whatever
-  //      JSON object you want; just make sure your worker understands
-  //      it and you have sufficient information to understand the 
-  //      result which is returned later.
-  __queueSomeIntensiveTask(obj = {}) {
+  render() {
     const {
       postMessage,
     } = this.state;
-    postMessage({});
-  }
-  render() {
     return (
-      <View
-        style={{
-          flex: 1,
-        }}
-      >
+      <View style={styles.container}>
         <Elsewhere
-          onPostMessage={this.__onPostMessage}
-          engine={engine}
-          onMessage={(data) => {
-            // XXX: Here, data contains any results that were passed
-            //      from the engine's call to postMessage({}).
+          engine={doSomethingIntense}
+          onMessage={data => Alert.alert(JSON.stringify(data))}
+          onPostMessage={(postMessage) => {
+            this.setState({
+              postMessage,
+            });
           }}
         />
-        {/* your app here */}
+        <Text style={styles.welcome}>Welcome to React Native!</Text>
+        <Text style={styles.instructions}>To get started, open the debug menu and enable the performance monitor so we can watch the JS frame rate.</Text>
+        <Text style={styles.instructions}>It should read a steady 60fps. ⏰ </Text>
+        <Text style={styles.instructions}>{'🤓'}</Text>
+        <Text style={styles.instructions}>Tap the Button below to watch your frame rate plummet! 📉 </Text>
+        <View
+          style={{
+            padding: 10,
+          }}
+        >
+          <Button
+            title="Run on JS thread"
+            style={styles.button}
+            onPress={() => doSomethingIntense(
+              (data) => Alert.alert(JSON.stringify(data)),
+              { source: 'ui' },
+            )}
+          />
+        </View>
+        <Text style={styles.instructions}>Intense, right? Now run the exact same operation inside of an Elsewhere. 📈 </Text>
+        <View
+          style={{
+            padding: 10,
+          }}
+        >
+          <Button
+            title="Run on Elsewhere"
+            style={styles.button}
+            onPress={() => postMessage(
+              { source: 'web' },
+            )}
+          />
+        </View>
+        <Text>See how the frame rate stays at 60? Magic. 🔮 </Text>
       </View>
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  welcome: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
+  },
+  instructions: {
+    textAlign: 'center',
+    color: '#333333',
+    marginBottom: 5,
+  },
+  button: {
+    marginBottom: 15,
+  }
+});
 ```
-Check out the [example](https://github.com/Cawfree/react-native-elsewhere/blob/master/example/App.js) application for a full demonstration.
 
 ## 💾 Persistence
 Using the `scripts` prop, it is possible to define an array of urls that you'd like to import as `<script/>`s within your JavaScript logic. Some scripts you call to may rely on localStorage for persistence between launches of your application; however for this to work successfully, your `engine` will need to be serialized to a file location so that thr browser can associate stored data with a given file `uri`.
@@ -101,6 +137,13 @@ export default class Persisted extends React.Component {
       <Elsewhere
         engine={engine}
         uri={uri}
+        scripts={[
+          // XXX: for example, you could use lokijs as a persistent database!
+          'https://rawgit.com/techfort/LokiJS/master/src/lokijs.js',
+          'https://rawgit.com/techfort/LokiJS/master/src/loki-indexed-adapter.js',
+          // XXX: or you could make lodash available to your engine
+          'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/1.2.1/lodash.min.js',
+        ]}
         onRequestPersist={(html, url) => {
           // XXX: You must return a Promise, which when reslved guarantees
           //      that the engine html has been saved to the requested uri.
