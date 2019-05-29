@@ -1,6 +1,6 @@
 {
   "name": "@cawfree/react-native-elsewhere",
-  "version": "1.0.13",
+  "version": "1.0.17",
   "description": "Ridiculously simple React Native thread unblocking",
   "main": "index.js",
   "repository": "https://github.com/Cawfree/react-native-elsewhere",
