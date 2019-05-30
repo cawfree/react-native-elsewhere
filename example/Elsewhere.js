@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, View, Alert, StyleSheet, WebView } from 'react-native';
+import { Platform, View, StyleSheet, WebView } from 'react-native';
 import PropTypes from 'prop-types';
 
 import escape from 'js-string-escape';
@@ -41,6 +41,48 @@ export default class Elsewhere extends React.Component {
         ${scripts.map(script => `<script src="${script}"></script>`).join('\n')}
         <script>
           window.engine = ${engine.toString()};
+        </script>
+        <script>
+          // XXX: https://github.com/facebook/react-native/issues/11594#issuecomment-298850709
+          function awaitPostMessage() {
+            var isReactNativePostMessageReady = !!window.originalPostMessage;
+            var queue = [];
+            var currentPostMessageFn = function store(message) {
+              if (queue.length > 100) queue.shift();
+              queue.push(message);
+            };
+            if (!isReactNativePostMessageReady) {
+              var originalPostMessage = window.postMessage;
+              Object.defineProperty(
+                window,
+                'postMessage',
+                {
+                  configurable: true,
+                  enumerable: true,
+                  get: function () {
+                    return currentPostMessageFn;
+                  },
+                  set: function (fn) {
+                    currentPostMessageFn = fn;
+                    isReactNativePostMessageReady = true;
+                    setTimeout(sendQueue, 0);
+                  },
+                },
+              );
+              window.postMessage.toString = function () {
+                return String(originalPostMessage);
+              };
+            }
+            function sendQueue() {
+              while (queue.length > 0) window.postMessage(queue.shift());
+            }
+          }
+          awaitPostMessage();
+          window.postMessage(JSON.stringify(
+            {
+              __elsewhere: true,
+            },
+          ));
         </script>
       </body>
     </html>
@@ -89,29 +131,29 @@ export default class Elsewhere extends React.Component {
       .then(() => this.setState({ uri }));
   }
   __onLoadEnd() {
-    const {
-      uri,
-    } = this.props;
-    const {
-      persistedUri,
-    } = this.state;
-    const {
-      onPostMessage,
-    } = this.props;
-    if (((!uri) || (uri && persistedUri)) && onPostMessage) {
-      onPostMessage(
-        (data = {}) => this.refs.engine.injectJavaScript(
-          `window.engine((data => window.postMessage(JSON.stringify(data))), ${JSON.stringify(data)});`,
-        ),
-      );
-    }
+    
   }
   __onMessage(e) {
     const {
       onMessage,
     } = this.props;
     const data = JSON.parse(e.nativeEvent.data || '{}');
-    if (onMessage) {
+    const {
+      __elsewhere,
+    } = data;
+    // XXX: When postMessage is ready, defer to the caller.
+    if (__elsewhere) {
+      const {
+        onPostMessage,
+      } = this.props;
+      if (onPostMessage) {
+        onPostMessage(
+          (data = {}) => this.refs.engine.injectJavaScript(
+            `window.engine((data => window.postMessage(JSON.stringify(data))), ${JSON.stringify(data)});`,
+          ),
+        );
+      }
+    } else if (onMessage) {
       onMessage(data);
     }
   }
@@ -147,7 +189,6 @@ export default class Elsewhere extends React.Component {
           originWhitelist={['*']}
           onMessage={this.__onMessage}
           allowFileAccess={allowFileAccess}
-          onLoad={this.__onLoadEnd}
         />
       </View>
     );
