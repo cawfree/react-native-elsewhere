@@ -38,9 +38,48 @@ export default class Elsewhere extends React.Component {
         <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
       </head>
       <body>
+        <script>
+          // XXX: https://github.com/facebook/react-native/issues/11594#issuecomment-298850709
+          function awaitPostMessage() {
+            var isReactNativePostMessageReady = !!window.originalPostMessage;
+            var queue = [];
+            var currentPostMessageFn = function store(message) {
+              if (queue.length > 100) queue.shift();
+              queue.push(message);
+            };
+            if (!isReactNativePostMessageReady) {
+              var originalPostMessage = window.postMessage;
+              Object.defineProperty(
+                window,
+                'postMessage',
+                {
+                  configurable: true,
+                  enumerable: true,
+                  get: function () {
+                    return currentPostMessageFn;
+                  },
+                  set: function (fn) {
+                    currentPostMessageFn = fn;
+                    isReactNativePostMessageReady = true;
+                    setTimeout(sendQueue, 0);
+                  },
+                },
+              );
+              window.postMessage.toString = function () {
+                return String(originalPostMessage);
+              };
+            }
+            function sendQueue() {
+              while (queue.length > 0) window.postMessage(queue.shift());
+            }
+          }
+        </script>
         ${scripts.map(script => `<script src="${script}"></script>`).join('\n')}
         <script>
           window.engine = ${engine.toString()};
+        </script>
+        <script>
+          awaitPostMessage();
         </script>
       </body>
     </html>
@@ -48,6 +87,7 @@ export default class Elsewhere extends React.Component {
   constructor(nextProps) {
     super(nextProps);
     this.__onMessage = this.__onMessage.bind(this);
+    this.__onLoadEnd = this.__onLoadEnd.bind(this);
     const {
       uri,
       engine,
@@ -87,11 +127,17 @@ export default class Elsewhere extends React.Component {
       ))
       .then(() => this.setState({ uri }));
   }
-  componentDidMount() {
+  __onLoadEnd() {
+    const {
+      uri,
+    } = this.props;
+    const {
+      persistedUri,
+    } = this.state;
     const {
       onPostMessage,
     } = this.props;
-    if (onPostMessage) {
+    if (((!uri) || (uri && persistedUri)) && onPostMessage) {
       onPostMessage(
         (data = {}) => this.refs.engine.injectJavaScript(
           `window.engine((data => window.postMessage(JSON.stringify(data))), ${JSON.stringify(data)});`,
@@ -140,6 +186,7 @@ export default class Elsewhere extends React.Component {
           originWhitelist={['*']}
           onMessage={this.__onMessage}
           allowFileAccess={allowFileAccess}
+          onLoad={this.__onLoadEnd}
         />
       </View>
     );
