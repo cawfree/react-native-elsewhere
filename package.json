@@ -1,11 +1,14 @@
 {
   "name": "@cawfree/react-native-elsewhere",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "Ridiculously simple React Native thread unblocking",
   "main": "index.js",
   "repository": "https://github.com/Cawfree/react-native-elsewhere",
   "author": "hello@cawfree.com",
   "keywords": ["thread", "threading", "background", "ui", "fast", "processing", "task", "react", "native", "react-native"],
   "license": "MIT",
-  "private": false
+  "private": false,
+  "peerDependencies": {
+    "fast-stringify": "^1.1.1"
+  }
 }
