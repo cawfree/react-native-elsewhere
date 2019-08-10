@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform, View, StyleSheet, WebView } from 'react-native';
 import PropTypes from 'prop-types';
-import stringify from 'fast-stringify';
 
 import escape from 'js-string-escape';
 
@@ -40,12 +39,6 @@ export default class Elsewhere extends React.Component {
       </head>
       <body>
         ${scripts.map(script => `<script src="${script}"></script>`).join('\n')}
-        <!-- Use fast-stringify for the communications bridge. -->
-        <script>
-          'use strict';
-          var first=function(a,b){for(var c=Array(b),d=0;d<b;d++)c[d]=a[d];return c};var getCircularValue=function(a,b,c){return "[ref-"+c+"]"};var indexOf=function(a,b){for(var c=0;c<a.length;c++)if(a[c]===b)return c;return -1};var createReplacer=function(a,b){var c,d,e=[];return function(f,g){if(!e.length)e[0]=g;else if(c=indexOf(e,this),~c?e=first(e,c+1):e[e.length]=this,d=indexOf(e,g),~d)return (b||getCircularValue).call(this,f,g,d);return "function"==typeof a?a.call(this,f,g):g}};
-          function stringify(a,b,c,d){return JSON.stringify(a,createReplacer(b,d),c)}
-        </script>
         <script>
           window.engine = ${engine.toString()};
         </script>
@@ -85,7 +78,7 @@ export default class Elsewhere extends React.Component {
             }
           }
           awaitPostMessage();
-          window.postMessage(stringify(
+          window.postMessage(JSON.stringify(
             {
               __elsewhere: true,
             },
@@ -144,7 +137,11 @@ export default class Elsewhere extends React.Component {
     const {
       onMessage,
     } = this.props;
-    const data = JSON.parse(e.nativeEvent.data || '{}');
+    const receivedData = e.nativeEvent.data || '{}';
+    const data = JSON.parse(
+      // XXX: iOS double-encodes returned data!
+      Platform.OS === 'ios' ? decodeURIComponent(decodeURIComponent(receivedData)) : receivedData,
+    );
     const {
       __elsewhere,
     } = data;
@@ -156,7 +153,7 @@ export default class Elsewhere extends React.Component {
       if (onPostMessage) {
         onPostMessage(
           (data = {}) => this.refs.engine.injectJavaScript(
-            `window.engine((data => window.postMessage(stringify(data))), ${stringify(data)});`,
+            `window.engine((data => window.postMessage(JSON.stringify(data))), ${JSON.stringify(data)});`,
           ),
         );
       }
