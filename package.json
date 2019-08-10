@@ -7,8 +7,5 @@
   "author": "hello@cawfree.com",
   "keywords": ["thread", "threading", "background", "ui", "fast", "processing", "task", "react", "native", "react-native"],
   "license": "MIT",
-  "private": false,
-  "peerDependencies": {
-    "fast-stringify": "^1.1.1"
-  }
+  "private": false
 }

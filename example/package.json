@@ -7,7 +7,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "fast-stringify": "^1.1.1",
     "js-string-escape": "^1.0.1",
     "react": "16.8.3",
     "react-native": "0.59.8",
