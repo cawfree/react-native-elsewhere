@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {Button, Platform, StyleSheet, Text, View, Alert} from 'react-native';
+import fs from 'react-native-fs';
 
 import Elsewhere from './Elsewhere';
 
@@ -10,17 +11,32 @@ function doSomethingIntense(postMessage, { source }) {
   for (var i = Math.pow(10, 7); i >= 0; i--) {      
     result += Math.atan(i) * Math.tan(i);
   };
-  postMessage({
+  const message = {
     source,
     result,
     dt: new Date().getTime() - now.getTime(),
-  });
+  };
+  if (source === 'web') {
+    // XXX: Notice that lodash isn't part of the native dependency map, but it _is_ available to the Elsewhere (web) target!
+    return postMessage(
+      _.merge(
+        message,
+        {
+          description: 'Message via lodash!',
+        },
+      ),
+    );
+  }
+  return postMessage(
+    message,
+  );
 }
 
 type Props = {};
 export default class App extends Component<Props> {
   state = {
     postMessage: () => null,
+    now: new Date(),
   }
   render() {
     const {
@@ -31,11 +47,27 @@ export default class App extends Component<Props> {
         <Elsewhere
           engine={doSomethingIntense}
           onMessage={data => Alert.alert(JSON.stringify(data))}
+          scripts={[
+            // XXX: As an example, supply a dependency on lodash.
+            'https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js',
+          ]}
           onPostMessage={(postMessage) => {
+            console.warn(
+              `Time to initialize: ${(new Date().getTime()) - this.state.now.getTime()}ms`,
+            );
             this.setState({
               postMessage,
             });
           }}
+          uri={`${fs.DocumentDirectoryPath}/elsewhere.html`}
+          onRequestPersist={(data, uri) => fs
+            .writeFile(
+              uri,
+              data,
+            )}
+          onRequestRestore={uri => fs.readFile(
+            uri,
+          )}
         />
         <Text style={styles.welcome}>Welcome to React Native!</Text>
         <Text style={styles.instructions}>To get started, open the debug menu and enable the performance monitor so we can watch the JS frame rate.</Text>

@@ -1,11 +1,26 @@
 {
   "name": "@cawfree/react-native-elsewhere",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "Ridiculously simple React Native thread unblocking",
   "main": "index.js",
   "repository": "https://github.com/Cawfree/react-native-elsewhere",
   "author": "hello@cawfree.com",
-  "keywords": ["thread", "threading", "background", "ui", "fast", "processing", "task", "react", "native", "react-native"],
+  "keywords": [
+    "thread",
+    "threading",
+    "background",
+    "ui",
+    "fast",
+    "processing",
+    "task",
+    "react",
+    "native",
+    "react-native"
+  ],
   "license": "MIT",
-  "private": false
+  "private": false,
+  "dependencies": {
+    "axios": "^0.19.0",
+    "htmlclean": "^3.0.8"
+  }
 }
