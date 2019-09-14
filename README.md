@@ -172,7 +172,5 @@ It is also possible to cache your evaluated engine; persisted engines can be re-
 
 Implementors should note that if the contents of your `scripts` or the implementation of your `engine` changes in any way, the cached dependencies will be cleared and re-written and will be fetched on future inspections of the cache.
 
-```
-
 ## ✌️ License
 [MIT](https://opensource.org/licenses/MIT)
