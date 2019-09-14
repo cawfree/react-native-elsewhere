@@ -158,7 +158,8 @@ export default class Persisted extends React.Component {
 }
 ```
 
-``` Performance
+## 📈 Performance
+
 It is also possible to cache your evaluated engine; persisted engines can be re-used between app executions by providing the `onRequestRestore` prop, which essentially reads the file you've stored to the persisted `uri` via the `onRequestPersist` callback. This can be used to avoid the initialization overhead that comes when depending on external `scripts`, by reverting to the cached equivalent:
 
 ```javascript
