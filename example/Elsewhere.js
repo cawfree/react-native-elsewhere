@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, View, StyleSheet, WebView } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 
 import escape from 'js-string-escape';
@@ -20,6 +20,7 @@ export default class Elsewhere extends React.Component {
     onMessage: PropTypes.func,
     onPostMessage: PropTypes.func,
     scripts: PropTypes.arrayOf(PropTypes.string),
+    WebView: PropTypes.func.isRequired,
   }
   static defaultProps = {
     engine: function(postMessage, data) {},
@@ -168,6 +169,7 @@ export default class Elsewhere extends React.Component {
       onMessage,
       onPostMessage,
       scripts,
+      WebView,
       ...extraProps
     } = this.props;
     const {
