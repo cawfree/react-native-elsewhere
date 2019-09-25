@@ -21,6 +21,7 @@ export default class Elsewhere extends React.Component {
     onPostMessage: PropTypes.func,
     scripts: PropTypes.arrayOf(PropTypes.string),
     WebView: PropTypes.func.isRequired,
+    useDeprecatedApi: PropTypes.bool,
   }
   static defaultProps = {
     engine: function(postMessage, data) {},
@@ -29,8 +30,9 @@ export default class Elsewhere extends React.Component {
     onMessage: data => null,
     onPostMessage: postMessage => null,
     scripts: [],
+    useDeprecatedApi: false,
   }
-  static wrapEngine = (engine, scripts = []) => `
+  static wrapEngine = (engine, scripts = [], useDeprecatedApi = false) => `
     <!doctype html>
     <html>
       <head>
@@ -44,46 +46,13 @@ export default class Elsewhere extends React.Component {
           window.engine = ${engine.toString()};
         </script>
         <script>
-          // XXX: https://github.com/facebook/react-native/issues/11594#issuecomment-298850709
-          function awaitPostMessage() {
-            var isReactNativePostMessageReady = !!window.originalPostMessage;
-            var queue = [];
-            var currentPostMessageFn = function store(message) {
-              if (queue.length > 100) queue.shift();
-              queue.push(message);
-            };
-            if (!isReactNativePostMessageReady) {
-              var originalPostMessage = window.postMessage;
-              Object.defineProperty(
-                window,
-                'postMessage',
-                {
-                  configurable: true,
-                  enumerable: true,
-                  get: function () {
-                    return currentPostMessageFn;
-                  },
-                  set: function (fn) {
-                    currentPostMessageFn = fn;
-                    isReactNativePostMessageReady = true;
-                    setTimeout(sendQueue, 0);
-                  },
-                },
-              );
-              window.postMessage.toString = function () {
-                return String(originalPostMessage);
-              };
-            }
-            function sendQueue() {
-              while (queue.length > 0) window.postMessage(queue.shift());
-            }
-          }
-          awaitPostMessage();
-          window.postMessage(JSON.stringify(
-            {
-              __elsewhere: true,
-            },
-          ));
+          ${useDeprecatedApi ? 'window.postMessage' : 'window.ReactNativeWebView.postMessage'}(
+            JSON.stringify(
+              {
+                __elsewhere: true,
+              },
+            ),
+          );
         </script>
       </body>
     </html>
@@ -96,12 +65,14 @@ export default class Elsewhere extends React.Component {
       uri,
       engine,
       scripts,
+      useDeprecatedApi,
     } = nextProps;
     this.state = {
       uri: null,
       html: Elsewhere.wrapEngine(
         engine,
         scripts,
+        useDeprecatedApi,
       ),
     };
     if (uri) {
@@ -150,11 +121,12 @@ export default class Elsewhere extends React.Component {
     if (__elsewhere) {
       const {
         onPostMessage,
+        useDeprecatedApi,
       } = this.props;
       if (onPostMessage) {
         onPostMessage(
           (data = {}) => this.refs.engine.injectJavaScript(
-            `window.engine((data => window.postMessage(JSON.stringify(data))), ${JSON.stringify(data)});`,
+            `window.engine((data => ${useDeprecatedApi ? 'window.postMessage' : 'window.ReactNativeWebView.postMessage'}(JSON.stringify(data))), ${JSON.stringify(data)});`,
           ),
         );
       }
