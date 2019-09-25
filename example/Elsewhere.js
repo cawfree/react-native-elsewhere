@@ -46,6 +46,7 @@ export default class Elsewhere extends React.Component {
           window.engine = ${engine.toString()};
         </script>
         <script>
+          ${useDeprecatedApi ? `function awaitPostMessage(){var e=!!window.originalPostMessage,t=[],n=function(e){t.length>100&&t.shift(),t.push(e)};if(!e){var s=window.postMessage;Object.defineProperty(window,"postMessage",{configurable:!0,enumerable:!0,get:function(){return n},set:function(t){n=t,e=!0,setTimeout(o,0)}}),window.postMessage.toString=function(){return String(s)}}function o(){for(;t.length>0;)window.postMessage(t.shift())}}awaitPostMessage();` : ''}
           ${useDeprecatedApi ? 'window.postMessage' : 'window.ReactNativeWebView.postMessage'}(
             JSON.stringify(
               {
