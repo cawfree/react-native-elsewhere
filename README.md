@@ -17,7 +17,7 @@ By delegating stateless JavaScript computation to a [`<WebView />`](https://face
 
 ```javascript
 import React, {Component} from 'react';
-import {Button, Platform, StyleSheet, Text, View, Alert} from 'react-native';
+import {WebView, Button, Platform, StyleSheet, Text, View, Alert} from 'react-native';
 
 import Elsewhere from '@cawfree/react-native-elsewhere';
 
@@ -47,6 +47,7 @@ export default class App extends Component<Props> {
     return (
       <View style={styles.container}>
         <Elsewhere
+          WebView={WebView}
           engine={doSomethingIntense}
           onMessage={data => Alert.alert(JSON.stringify(data))}
           onPostMessage={(postMessage) => {
@@ -157,20 +158,6 @@ export default class Persisted extends React.Component {
   }
 }
 ```
-
-## 📈 Performance
-
-It is also possible to cache your evaluated engine; persisted engines can be re-used between app executions by providing the `onRequestRestore` prop, which essentially reads the file you've stored to the persisted `uri` via the `onRequestPersist` callback. This can be used to avoid the initialization overhead that comes when depending on external `scripts`, by reverting to the cached equivalent:
-
-```javascript
-<Elsewhere
-  uri="your-file-location"
-  onRequestPersist={(data, uri) => fs.writeFile(uri, data)}
-  onRequstRestore={uri => fs.readFile(uri)}
-/>
-```
-
-Implementors should note that if the contents of your `scripts` or the implementation of your `engine` changes in any way, the cached dependencies will be cleared and re-written and will be fetched on future inspections of the cache.
 
 ## ✌️ License
 [MIT](https://opensource.org/licenses/MIT)

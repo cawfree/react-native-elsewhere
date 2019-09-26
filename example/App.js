@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button, Platform, StyleSheet, Text, View, Alert} from 'react-native';
+import {WebView, Button, Platform, StyleSheet, Text, View, Alert} from 'react-native';
 import fs from 'react-native-fs';
 
 import Elsewhere from './Elsewhere';
@@ -45,6 +45,8 @@ export default class App extends Component<Props> {
     return (
       <View style={styles.container}>
         <Elsewhere
+          WebView={WebView}
+          useDeprecatedApi
           engine={doSomethingIntense}
           onMessage={data => Alert.alert(JSON.stringify(data))}
           scripts={[
