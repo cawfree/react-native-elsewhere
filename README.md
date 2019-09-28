@@ -1,3 +1,8 @@
+# 🚨 Deprecation Notice
+The `<Elsewhere />` component relies upon the `toString()` method to delegate native functions to a `<WebView />`, which is [not possible to achieve in conjunction with the Hermes engine](https://github.com/facebook/hermes/issues/114).
+
+Developers are urged to migrate into [nodejs-mobile-react-native-bridge](https://github.com/cawfree/nodejs-mobile-react-native-bridge).
+
 # react-native-elsewhere
 Ridiculously simple React Native thread unblocking.
 
